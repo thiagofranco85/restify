@@ -1,7 +1,7 @@
 var restify = require('restify')
-var Router = require('./../common/router')
-var {User, UserSchema} = require('./../models/user')
-var {Product, ProductSchema} = require('./../models/product')
+var Router = require('../common/router')
+var {User, UserSchema} = require('../models/user.model')
+var {Product, ProductSchema} = require('../models/product.model')
 
 class UserRoutes extends Router {
 

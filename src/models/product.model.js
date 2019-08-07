@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var { User, UserSchema } = require("./user")
+var { User, UserSchema } = require("./user.model")
 
 var ProductSchema = new mongoose.Schema({ 
     name: String,

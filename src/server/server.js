@@ -21,7 +21,7 @@ module.exports = class Server{
                 })
                 */
 
-                for (let router of routers) {
+                for (let router of routers) { 
                     router.applyRoutes( this.application )                    
                 }
 

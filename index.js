@@ -2,25 +2,27 @@ var restify = require('restify');
 var Server = require('./src/server/server')
 //var mongoose = require('mongoose');
 var Conexao = require('./src/db/conexao');
-var {User, UserSchema} = require("./src/models/user")
+var {User, UserSchema} = require("./src/models/user.model")
 //var {Product, ProductSchema} = require("./src/models/product")
-var userRoutes = require('./src/routes/userRoutes')
-
+var userRoutes = require('./src/routes/user.routes')
+var Router = require('./src/common/router')
 
 
 //Conexao
 Conexao.conectar('localhost', '27017', 'test');
 
-const server = new Server()
+const server = new Server() 
 
 server.bootstrap([userRoutes]).then( server => {
-  console.log( "Server Listening On "+ JSON.stringify( server.application.address() ) ) 
+  console.log( "Server Listening On " + JSON.stringify( server.application.address() ) ) 
 }).catch(error =>{
   console.log("Server Failed: "+ error)
   console.error(error)
   process.exit(1)
 });
 
+
+ 
 //var userRoutes = require('./src/routes/userRoutes');
 
  
