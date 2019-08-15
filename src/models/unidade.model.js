@@ -1,5 +1,5 @@
 var mongoose = require('mongoose')
-
+var environment = require('./../common/environment')
 let {Escola, EscolaSchema} = require('./escola.model');
 let {Livro, LivroSchema} = require('./livro.model');
 
@@ -26,8 +26,10 @@ var UnidadeSchema = new mongoose.Schema({
     },
     escola: { type: mongoose.Schema.Types.ObjectId, ref: 'Escola', required: true  },
     livros: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Livro' }]    
-});
+},
+    environment.mongoose.config
+);
 
-var Unidade =  mongoose.model('Unidade', UnidadeSchema);
+var Unidade =  mongoose.model('Unidade', UnidadeSchema, 'unidade');
 
 module.exports = {Unidade, UnidadeSchema};

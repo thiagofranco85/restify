@@ -4,14 +4,14 @@ var Server = require('./src/server/server')
 var Conexao = require('./src/db/conexao'); 
 var Router = require('./src/common/router')
 var testeRoutes = require('./src/routes/teste.routes')
-
+var escolaRoutes = require('./src/routes/escola.routes')
 
 //Conexao
 Conexao.conectar('localhost', '27017', 'livro_pratico');
 
 const server = new Server() 
 
-server.bootstrap([testeRoutes]).then( server => {
+server.bootstrap([testeRoutes, escolaRoutes]).then( server => {
   console.log( "Server Listening On " + JSON.stringify( server.application.address() ) ) 
 }).catch(error =>{
   console.log("Server Failed: "+ error)

@@ -10,164 +10,177 @@ class TesteRoutes extends Router {
 
     applyRoutes( application ){
 
-        application.get('/testesync', (req, resp, next) => {
-            function pegaSerie(serie){
-                return serie
-            }
-            let serie =   Serie.findOne({}, (err, doc) => {
-              
-                pegaSerie(doc)
-            });
-
-            console.log( serie );
+        application.get('/testeimasters', (req, resp, next) => {
+            function retornarUsuarioBanco1() {
+                return new Promise((resolve, reject) => {
+                    const usuarioBancoOracle = { 'nome': 'Erick Wendel' };
+                    return resolve(usuarioBancoOracle);
             
+                });
+            }
+            
+            function retornarUsuarioBanco2() {
+                return new Promise((resolve, reject) => {
+                    const usuarioBancoMySql = { 'nome': 'Zina da Silva' };
+                    return resolve(usuarioBancoMySql);
+                });
+            }
+            
+            function retornarUsuarioBanco3() {
+                return new Promise((resolve, reject) => {
+                    const usuarioBancoSqlServer = { 'nome': 'Xuxa de Souza' };
+                    console.log('Esperar 3 segundos');
+                    return setTimeout( () => resolve(usuarioBancoSqlServer), 3000);
+                });
+            }
+            //enviamos em um array, a chamada de cada função que deve ser executada
+            Promise.all([
+                retornarUsuarioBanco1(),                
+                retornarUsuarioBanco3(),
+                retornarUsuarioBanco2(),
+            ])
+            // na função THEN recuperamos o resultado de cada uma em um array. 
+            // os valores sao retornados na ordem em que foram chamados
+                .then(
+                    (resultados) => {
+            
+                        let usuarioOracle = resultados[0];
+                        let usuarioMySql = resultados[1];
+                        let usuarioSqlServer = resultados[2];
+                        let mensagem = `
+                                        Oracle: ${usuarioOracle.nome},
+                                        MySQL: ${usuarioMySql.nome},
+                                        SQLServer: ${usuarioSqlServer.nome}
+                                        `;
+            
+                        console.log(mensagem);
+                    },
+                    (erro) => {
+                        console.log(`deu zica!! [ ${erro} ]`);
+                    }
+                   );        
         });
+
+         
 
         application.get('/criarbanco', (req, resp, next) => {
 
-            //Removendo segmentos e series(casos existam)
-            Segmento.deleteMany().then( x => console.log( x ));
-            Serie.deleteMany().then( x => console.log( x ));
-            
             let arrSegmentos = [
                 {nome: 'Educação Infantil', series:['Maternal I', 'Maternal II', 'Pré-Escola I', 'Pré_escola II']},
                 {nome: 'Ensino Fundamental I', series:['1º Ano', '2º Ano', '3º Ano', '4º Ano','5º Ano']},
                 {nome: 'Ensino Fundamental II', series:['6º Ano', '7º Ano', '8º Ano', '9º Ano']},
                 {nome: 'Ensino Médio', series:['1ª Ano', '2ª Ano', '3ª Ano']}
-            ]
-            //criando segmentos e series 
-                   
-            /*     
-            arrSegmentos.map( (x,i) => {
-                let segmento =  new Segmento({ nome: x.nome });
-                segmento.save()
-                .then( x => {
-                    console.log(`O Segmento ${x.nome} foi salvo!`);
-                    let arrSerie = arrSegmentos[i].series;
-                    let idSeg = x._id;
-                    arrSerie.map( (serie, indexSerie ) => {
-  
-                        let objSerie = new Serie({nome:serie, segmento: x._id });
-                        objSerie.save()
-                        .then( y => {
-                            console.log(`A série ${y.nome} foi salva!`);
-                        })
-                        .catch( () => console.error('Ocorreu um erro ao inserir as series!') )
-                    })
+            ];
 
-                })
-                .catch( () => console.error('Ocorreu um erro ao inserir os segmentos!') );
-            });
-            */
 
-           function createSegmentosSeries(arrSegmentos){
+            function createSegmentos(arrSegmentos){
+                Segmento.deleteMany().exec();
+
                 return new Promise( (resolve, reject) => {
-
+                    let  result = arrSegmentos.map( segmento => Segmento.create( {nome:segmento.nome} ) ) 
+                    //result.map(x => console.log(x))
+                     
+                    resolve( Promise.all(result) );
                 })
-            }    
+            }
 
+            function createSeries( segmentos, arrSegmentos ){
+                Serie.deleteMany().exec();
 
-            arrSegmentos.map( (x,i) => {
-                let segmento =  new Segmento({ nome: x.nome });
-                segmento.save() 
-                .then( x => {
-                    console.log(`O Segmento ${x.nome} foi salvo!`);
-                    let arrSerie = arrSegmentos[i].series;
-                    
-                    return [x, arrSerie];
-
-                })
-                .then( (x, arrSerie) => { 
-                    
-                    arrSerie.map( (serie, indexSerie ) => {
-                        console.log( [x, arrSerie])
-                        let objSerie = new Serie({nome:serie, segmento: x._id });
-                        objSerie.save()
-                        .then( y => {
-                            console.log(`A série ${y.nome} foi salva!`);
+                return new Promise( (resolve, reject ) => {
+                    let result = segmentos.map( (segmento, i) => {
+                        let id = segmento._id;
+                        let nome = segmento.nome;
+                        let series = arrSegmentos[i].nome == nome ? arrSegmentos[i].series : null;
+    
+                        let result = series.map( serie => {
+                            return Serie.create({nome: serie, segmento:id})
                         })
-                        .catch( () => console.error('Ocorreu um erro ao inserir as series!') )
-                    })
+                        return Promise.all(result)
+                    });                   
                     
+                    resolve( Promise.all(result) )
                 })
-                .catch( () => console.error('Ocorreu um erro ao inserir os segmentos!') );
-            });
+            }
 
+            function createLivro(serie){
+                Livro.deleteMany().exec();
 
-            //removendo livros
-            Livro.deleteMany().then( x => console.log( x ));
-            /*
-            let livro = new Livro({
-                nome: 'Aprendendo com Alegria', 
-                edicao: 13,
-                valor: 59.90 
-            });
- 
+                return new Promise( (resolve, reject) => {
+                    let result = Livro.create({
+                        nome: 'Aprendendo com Alegria', 
+                        edicao: 13,
+                        valor: 59.90,
+                        serie: serie
+                    });
 
-            Serie.findOne().then( x => { 
-                
-                
-            });
-            
+                    resolve(result);
+                })
+            }
 
-            livro.save();
-            */
+            function createEscola(){
+                Escola.deleteMany().exec();
 
+                return new Promise( (resolve, reject) => {
+                    let result = Escola.create({
+                        nome: "Lar dos Meninos",
+                        razaoSocial: 'Santa Mônica Centro Educacional',
+                        logo: 'logoSmce.jpg'
+                    });
 
-            
-            //removendo escolas     
-            Escola.deleteMany().then( x => console.log( x ));
+                    resolve(result);
+                })
+            }
 
-            //criando escola
-            let escola = new Escola({
-                nome: "Lar dos Meninos",
-                razaoSocial: 'Santa Mônica Centro Educacional',
-                logo: 'logoSmce.jpg'
-            });
-            escola.save();
+            function createUnidade(escola, livros){
+                Unidade.deleteMany().then();
+                return new Promise( (resolve, reject) => {
+                    let result = Unidade.create({
+                        nome: 'Bento Ribeiro',
+                        endereco: {
+                            logradouro: 'Rua Divisória',
+                            numero: '79', 
+                            cep: '21331-250',
+                            bairro: 'Bento Ribeiro',
+                            cidade: 'Rio de Janeiro',
+                            estado: 'RJ'
+                        }, 
+                        contatos:{
+                            email: 'contato@santamonicace.com.br',
+                            ddd: 21,
+                            telefone: ['2222-3333','4444-5555'],
+                            celular: ['99999-8888'],
+                            site: 'www.santamonicace.com.br' 
+                        },
+                        livros: livros,
+                        escola: escola._id   
+                    });
 
-            //removendo unidades     
-            Unidade.deleteMany().then( x => console.log( x ));
+                    resolve(result);
+                })
+            }
 
-            let unidade = new Unidade({
-                nome: 'Bento Ribeiro',
-                endereco: {
-                    logradouro: 'Rua Divisória',
-                    numero: '79', 
-                    cep: '21331-250',
-                    bairro: 'Bento Ribeiro',
-                    cidade: 'Rio de Janeiro',
-                    estado: 'RJ'
-                }, 
-                contatos:{
-                    email: 'contato@santamonicace.com.br',
-                    ddd: 21,
-                    telefone: ['2222-3333','4444-5555'],
-                    celular: ['99999-8888'],
-                    site: 'www.santamonicace.com.br' 
-                },
-                escola: escola._id   
-            });
-
-            Livro.findOne().then( x => {
-                unidade.livros = [livro._id]
-                //criando unidade
-                unidade.save();
+            //console.log( createSegmentos(arrSegmentos).then(x => console.log(x)) )
+             
+            createSegmentos(arrSegmentos)
+            .then( segmentos => {
+                 return createSeries(segmentos,arrSegmentos);
             })
-
-            
-
-            
- 
-             /*
-            User.findById("5d4a098ecb695e4070b5c795")
-            .populate('product')
-            .then( (users) => {
-                console.log(users)
-                resp.json({message: 'List of Users', data: users})
+            .then( () => { 
+                let livro = Serie.findOne()
+                .then( serie => createLivro(serie) );   
+                           
+                return livro;
             })
-            */
-            
+            .then( () => createEscola() )
+            .then( escola => {
+                let unidade = Livro.findOne()
+                .then( livro => createUnidade(escola, livro) )
+                
+                return unidade;
+                
+            })
+            .catch(err => console.error( "Entrou no catch: " + err))      
         })
     }   
 }

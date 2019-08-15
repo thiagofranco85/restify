@@ -11,7 +11,7 @@ module.exports = class Server{
                 this.application = restify.createServer();
 
                 this.application.use(restify.plugins.queryParser());
-                
+                this.application.use(restify.pre.sanitizePath()); 
                 //Routes 
                 /*
                 this.application.get('/hello/:nome', (req,res,next) => {

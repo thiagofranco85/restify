@@ -1,6 +1,11 @@
 const environment = {
     server: { port: 8080 },
-    data: new Date().toLocaleString('pt-BR', {hour12: false, year: 'numeric',  month: '2-digit',  day: '2-digit',  hour: '2-digit',  minute: '2-digit',  second: '2-digit',  timeZone: 'America/Sao_Paulo'}) 
+    data: new Date().toLocaleString('pt-BR', {hour12: false, year: 'numeric',  month: '2-digit',  day: '2-digit',  hour: '2-digit',  minute: '2-digit',  second: '2-digit',  timeZone: 'America/Sao_Paulo'}), 
+    mongoose: {
+        config: {
+            timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } ,             
+        }         
+    }
 }
 
 
